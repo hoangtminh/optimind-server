@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Test Spring Boot STOMP</title>
+		<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+		<style>
+			body {
+				font-family: Arial;
+				padding: 20px;
+			}
+			input {
+				width: 400px;
+				padding: 5px;
+				margin-bottom: 10px;
+			}
+			button {
+				padding: 5px 15px;
+				cursor: pointer;
+			}
+			#log {
+				margin-top: 20px;
+				padding: 10px;
+				background: #f4f4f4;
+				border: 1px solid #ccc;
+				height: 300px;
+				overflow-y: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<h2>Kiểm tra WebSocket STOMP</h2>
+
+		<input
+			id="token"
+			type="text"
+			placeholder="Dán Token vào đây (không cần chữ Bearer)"
+		/><br />
+		<input
+			id="chatId"
+			type="text"
+			placeholder="Dán Chat ID vào đây (vd: 13d3d271...)"
+		/><br />
+		<input
+			id="messageText"
+			type="text"
+			placeholder="Nội dung tin nhắn gửi đi"
+			value="Hello từ HTML Test!"
+		/><br />
+
+		<button onclick="connectAndSubscribe()">1. Kết nối & Subscribe</button>
+		<button onclick="sendMessage()">2. Gửi tin nhắn</button>
+
+		<div id="log"></div>
+
+		<script>
+			let stompClient = null;
+
+			function log(msg, color = "black") {
+				document.getElementById("log").innerHTML +=
+					`<p style="color: ${color}; margin: 5px 0;">${msg}</p>`;
+			}
+
+			function connectAndSubscribe() {
+				const token = document.getElementById("token").value;
+				const chatId = document.getElementById("chatId").value;
+
+				if (!token || !chatId)
+					return alert("Vui lòng nhập Token và Chat ID");
+
+				// Kết nối vào endpoint của bạn qua SockJS
+				const socket = new SockJS("http://localhost:8080/chat");
+				stompClient = Stomp.over(socket);
+
+				// Tắt log dài dòng của STOMP nếu muốn (optional)
+				// stompClient.debug = null;
+
+				log("Đang kết nối...", "blue");
+
+				// Gửi header Authorization lúc CONNECT
+				stompClient.connect(
+					{ Authorization: "Bearer " + token },
+					function (frame) {
+						log("Đã kết nối thành công! " + frame, "green");
+
+						// Sau khi kết nối, tự động Subscribe luôn
+						const topicPath = "/topic/chat/" + chatId;
+						stompClient.subscribe(topicPath, function (message) {
+							log("📩 NHẬN TIN NHẮN: " + message.body, "purple");
+						});
+						log("Đã Subscribe vào: " + topicPath, "blue");
+					},
+					function (error) {
+						log("❌ Lỗi kết nối: " + error, "red");
+					},
+				);
+			}
+
+			function sendMessage() {
+				const chatId = document.getElementById("chatId").value;
+				const text = document.getElementById("messageText").value;
+
+				if (!stompClient || !stompClient.connected) {
+					return alert("Vui lòng kết nối trước!");
+				}
+
+				const destination = "/app/chat/" + chatId + "/send";
+				const payload = { text: text };
+
+				// Gửi tin nhắn
+				stompClient.send(destination, {}, JSON.stringify(payload));
+				log("📤 Đã gửi: " + text, "orange");
+			}
+		</script>
+	</body>
+</html>

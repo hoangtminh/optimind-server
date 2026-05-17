@@ -1,0 +1,62 @@
+services:
+    postgres:
+        image: postgres:16-alpine
+        container_name: optimind-postgres-database
+        environment:
+            POSTGRES_USER: ${DB_LOCAL_USER}
+            POSTGRES_PASSWORD: ${DB_LOCAL_PASSWORD}
+            POSTGRES_DB: ${DB_LOCAL_NAME}
+        ports:
+            - "5432:5432"
+        volumes:
+            - optimind-data:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        restart: unless-stopped
+
+    server:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: optimind-server
+        ports:
+            - "8080:8080"
+        depends_on:
+            postgres:
+                condition: service_healthy
+        env_file:
+            - .env
+        environment:
+            - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+            - SPRING_JPA_SHOW_SQL=true
+            - SPRING_DATASOURCE_URL=${DB_URL}
+            - SPRING_DATASOURCE_USERNAME=${DB_LOCAL_USER}
+            - SPRING_DATASOURCE_PASSWORD=${DB_LOCAL_PASSWORD}
+            - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+            - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+            - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+        restart: unless-stopped
+
+#     pgadmin:
+#         image: dpage/pgadmin4:latest
+#         container_name: optimind-pgadmin
+#         environment:
+#             PGADMIN_DEFAULT_EMAIL: friendcraftdemo@gmail.com
+#             PGADMIN_DEFAULT_PASSWORD: thedemo23
+#         ports:
+#             - "8080:80"
+#         volumes:
+#             - pgadmin-data:/var/lib/pgadmin
+#         depends_on:
+#             - postgres
+
+volumes:
+    optimind-data:
+        name: optimind_data
+#     pgadmin-data:
+#         name: optimind_pgadmin_data
+
