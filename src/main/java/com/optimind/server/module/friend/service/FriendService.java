@@ -21,4 +21,6 @@ public interface FriendService {
     List<FriendDTO.FriendRequestResponse> getIncomingFriendRequests(UUID userId);
 
     List<FriendDTO.FriendRequestResponse> getSentFriendRequests(UUID userId);
+
+    FriendDTO.SearchFriendResult searchFriendByEmail(UUID currentUserId, String email);
 }

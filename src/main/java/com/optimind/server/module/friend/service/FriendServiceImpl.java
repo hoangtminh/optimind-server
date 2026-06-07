@@ -127,6 +127,40 @@ public class FriendServiceImpl implements FriendService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public FriendDTO.SearchFriendResult searchFriendByEmail(UUID currentUserId, String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+
+        if (user.getId().equals(currentUserId)) {
+            return new FriendDTO.SearchFriendResult(
+                    user.getId(), user.getUsername(), user.getEmail(), user.getImageUrl(), "SELF");
+        }
+
+        // Check friendship
+        if (friendshipRepository.findFriendshipBetween(currentUserId, user.getId()).isPresent()) {
+            return new FriendDTO.SearchFriendResult(
+                    user.getId(), user.getUsername(), user.getEmail(), user.getImageUrl(), "FRIEND");
+        }
+
+        // Check if current user sent a request to searched user
+        if (friendRequestRepository.findPendingRequest(currentUserId, user.getId()).isPresent()) {
+            return new FriendDTO.SearchFriendResult(
+                    user.getId(), user.getUsername(), user.getEmail(), user.getImageUrl(), "REQUEST_SENT");
+        }
+
+        // Check if current user received a request from searched user
+        if (friendRequestRepository.findPendingRequest(user.getId(), currentUserId).isPresent()) {
+            return new FriendDTO.SearchFriendResult(
+                    user.getId(), user.getUsername(), user.getEmail(), user.getImageUrl(), "REQUEST_RECEIVED");
+        }
+
+        // Otherwise
+        return new FriendDTO.SearchFriendResult(
+                user.getId(), user.getUsername(), user.getEmail(), user.getImageUrl(), "NONE");
+    }
+
     private FriendDTO.UserSummary toUserSummary(UserEntity user) {
         return new FriendDTO.UserSummary(user.getId(), user.getUsername(), user.getEmail(), user.getImageUrl());
     }

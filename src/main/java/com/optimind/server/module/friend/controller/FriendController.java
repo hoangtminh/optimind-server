@@ -73,4 +73,10 @@ public class FriendController {
     public ResponseEntity<List<FriendDTO.FriendRequestResponse>> getSentFriendRequests() {
         return ResponseEntity.ok(friendService.getSentFriendRequests(getCurrentUserId()));
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<FriendDTO.SearchFriendResult> searchFriendByEmail(@RequestParam String email) {
+        FriendDTO.SearchFriendResult result = friendService.searchFriendByEmail(getCurrentUserId(), email);
+        return ResponseEntity.ok(result);
+    }
 }

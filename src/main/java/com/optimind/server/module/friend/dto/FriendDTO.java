@@ -6,6 +6,14 @@ public class FriendDTO {
     public record UserSummary(UUID id, String username, String email, String imageUrl) {
     }
 
+    public record SearchFriendResult(
+            UUID id,
+            String username,
+            String email,
+            String imageUrl,
+            String relationStatus // "FRIEND", "REQUEST_SENT", "REQUEST_RECEIVED", "NONE", "SELF"
+    ) {}
+
     public record SendFriendRequest(String email) {
     }
 
