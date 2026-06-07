@@ -62,6 +62,19 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("token", jwt));
     }
 
+    @GetMapping("/oauth2/callback")
+    public ResponseEntity<Void> handleGoogleCallback(
+            @org.springframework.web.bind.annotation.RequestParam("code") String code,
+            @org.springframework.web.bind.annotation.RequestParam("state") String state) {
+        
+        String delimiter = state.contains("?") ? "&" : "?";
+        String redirectUrl = state + delimiter + "code=" + code;
+
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FOUND)
+                .header(org.springframework.http.HttpHeaders.LOCATION, redirectUrl)
+                .build();
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UserDto> getMe(Authentication authentication) {
         if (authentication != null && authentication.getPrincipal() instanceof UserAuthenticate) {
