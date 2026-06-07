@@ -7,7 +7,7 @@ public class AuthRequest {
         public record RegisterRequest(String email, String password, String username) {
         }
 
-        public record OAuth2Request(String code) {
+        public record OAuth2Request(String code, String redirectUri) {
         }
 
         public record LogoutRequest(String refreshToken) {

@@ -106,7 +106,12 @@ public class AuthServiceImpl implements AuthService {
         params.add("code", req.code());
         params.add("client_id", clientId);
         params.add("client_secret", clientSecret);
-        params.add("redirect_uri", "http://localhost:3000/auth/callback");
+        
+        String redirectUri = req.redirectUri();
+        if (redirectUri == null || redirectUri.trim().isEmpty()) {
+            redirectUri = "http://localhost:3000/auth/callback";
+        }
+        params.add("redirect_uri", redirectUri);
         params.add("grant_type", "authorization_code");
 
         HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(params, tokenHeaders);
@@ -147,9 +152,12 @@ public class AuthServiceImpl implements AuthService {
                     return userRepository.save(newUser);
                 });
 
+        String refreshToken = jwtService.generateRefreshToken(user);
+        saveUserToken(user, refreshToken);
+
         AuthResponse.AuthenticateResponse res = new AuthenticateResponse(
                 jwtService.generateAccessToken(user),
-                jwtService.generateRefreshToken(user));
+                refreshToken);
         return res;
 
     }
