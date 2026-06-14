@@ -47,6 +47,7 @@ public class StudySessionServiceImpl implements StudySessionService {
                                                 ? request.averageFocus() / request.focusData().size()
                                                 : 0)
                                 .sessionType(request.sessionType())
+                                .completed(request.completed())
                                 .build();
 
                 session = studySessionRepository.save(session);
@@ -85,6 +86,7 @@ public class StudySessionServiceImpl implements StudySessionService {
                                 entity.getCycles(),
                                 entity.getAverageFocus(),
                                 entity.getSessionType(),
+                                entity.getCompleted(),
                                 entity.getCreatedAt());
         }
 

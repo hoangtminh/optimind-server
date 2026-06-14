@@ -18,4 +18,7 @@ public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
     List<TaskEntity> findByProjectIdAndUser_IdOrderByCreatedAtDesc(UUID projectId, UUID userId);
 
     Optional<TaskEntity> findByIdAndUserId(UUID taskId, UUID userId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(t) FROM TaskEntity t WHERE t.user.id = :userId AND t.isCompleted = true")
+    long countCompletedTasks(UUID userId);
 }

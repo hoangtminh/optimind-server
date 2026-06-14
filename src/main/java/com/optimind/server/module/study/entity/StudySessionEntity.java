@@ -54,6 +54,9 @@ public class StudySessionEntity {
     @Column(name = "average_focus")
     private double averageFocus;
 
+    @Column(name = "completed")
+    private Boolean completed;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;

@@ -2,13 +2,18 @@ package com.optimind.server.module.user.service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
 
 import org.springframework.stereotype.Service;
 
 import com.optimind.server.module.auth.AuthMapper;
 import com.optimind.server.module.user.dto.UserDto;
+import com.optimind.server.module.user.dto.LeaderboardUserDto;
+import com.optimind.server.module.user.dto.LeaderboardResponse;
+import com.optimind.server.module.user.dto.LeaderboardProjection;
 import com.optimind.server.module.user.entity.UserEntity;
 import com.optimind.server.module.user.repo.UserRepository;
+import com.optimind.server.module.task.repo.TaskRepository;
 
 import lombok.AllArgsConstructor;
 
@@ -17,6 +22,7 @@ import lombok.AllArgsConstructor;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final AuthMapper authMapper;
+    private final TaskRepository taskRepository;
 
     @Override
     public List<UserDto> listUser() {
@@ -35,5 +41,68 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id)
                 .map(authMapper::mapToUserDto)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Override
+    public LeaderboardResponse getLeaderboard(UUID currentUserId) {
+        // Fetch top 100 sorted by study time
+        List<LeaderboardProjection> projections = 
+            userRepository.findLeaderboardTop100(org.springframework.data.domain.PageRequest.of(0, 100));
+
+        List<LeaderboardUserDto> topUsers = new ArrayList<>();
+        LeaderboardUserDto currentUserDto = null;
+        long currentUserRank = 0;
+
+        for (int i = 0; i < projections.size(); i++) {
+            LeaderboardProjection p = projections.get(i);
+            int rank = i + 1;
+            boolean isMe = p.getId().equals(currentUserId);
+
+            LeaderboardUserDto dto = LeaderboardUserDto.builder()
+                .id(p.getId())
+                .name(p.getUsername() != null ? p.getUsername() : "User " + rank)
+                .avatar(p.getImageUrl())
+                .level(p.getLevel() != null ? p.getLevel() : 1)
+                .totalStudyTime(p.getStudyTime() != null ? p.getStudyTime() : 0)
+                .completedTasks(p.getCompletedTasks() != null ? p.getCompletedTasks() : 0)
+                .streak(p.getCurrentStreak() != null ? p.getCurrentStreak() : 0)
+                .rank(rank)
+                .isCurrentUser(isMe)
+                .build();
+
+            topUsers.add(dto);
+
+            if (isMe) {
+                currentUserDto = dto;
+                currentUserRank = rank;
+            }
+        }
+
+        // If current user is not in the top 100, fetch their rank and build their details DTO
+        if (currentUserDto == null) {
+            UserEntity me = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+            currentUserRank = userRepository.calculateRank(me.getStudyTime());
+            long completedTasks = taskRepository.countCompletedTasks(currentUserId);
+
+            currentUserDto = LeaderboardUserDto.builder()
+                .id(me.getId())
+                .name(me.getUsername() != null ? me.getUsername() : "You")
+                .avatar(me.getImageUrl())
+                .level(me.getLevel() != null ? me.getLevel() : 1)
+                .totalStudyTime(me.getStudyTime() != null ? me.getStudyTime() : 0)
+                .completedTasks(completedTasks)
+                .streak(me.getCurrentStreak() != null ? me.getCurrentStreak() : 0)
+                .rank((int) currentUserRank)
+                .isCurrentUser(true)
+                .build();
+        }
+
+        return LeaderboardResponse.builder()
+            .topUsers(topUsers)
+            .currentUser(currentUserDto)
+            .currentUserRank(currentUserRank)
+            .build();
     }
 }

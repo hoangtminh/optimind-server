@@ -20,6 +20,7 @@ public class StudySessionDTO {
                         int cycles,
                         double averageFocus,
                         String sessionType,
+                        Boolean completed,
                         List<FocusLogData> focusData) {
         }
 
@@ -33,6 +34,7 @@ public class StudySessionDTO {
                         int cycles,
                         double averageFocus,
                         String sessionType,
+                        Boolean completed,
                         Instant createdAt) {
         }
 

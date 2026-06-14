@@ -32,4 +32,17 @@ public class UserController {
     public ResponseEntity<UserDto> getUserProfile(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getUserProfile(id));
     }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<com.optimind.server.module.user.dto.LeaderboardResponse> getLeaderboard() {
+        return ResponseEntity.ok(userService.getLeaderboard(getCurrentUserId()));
+    }
+
+    private UUID getCurrentUserId() {
+        Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof com.optimind.server.module.auth.UserAuthenticate ua) {
+            return UUID.fromString(ua.getId());
+        }
+        return UUID.fromString(principal.toString());
+    }
 }

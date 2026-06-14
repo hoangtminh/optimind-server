@@ -12,4 +12,6 @@ public interface UserService {
     UserEntity getUserByEmail(String email);
 
     UserDto getUserProfile(UUID id);
+
+    com.optimind.server.module.user.dto.LeaderboardResponse getLeaderboard(UUID currentUserId);
 }
