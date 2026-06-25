@@ -33,6 +33,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +48,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
+
+    @Value("${google.client.android-id:}")
+    private String androidClientId;
 
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
@@ -196,8 +201,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse.AuthenticateResponse processGoogleIdTokenLogin(AuthRequest.GoogleIdTokenRequest req) {
         try {
+            List<String> audiences = new ArrayList<>();
+            audiences.add(clientId);
+            if (androidClientId != null && !androidClientId.trim().isEmpty()) {
+                audiences.add(androidClientId);
+            }
+
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                    .setAudience(Collections.singletonList(clientId))
+                    .setAudience(audiences)
                     .build();
 
             GoogleIdToken idToken = verifier.verify(req.idToken());
