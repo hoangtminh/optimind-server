@@ -72,13 +72,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        // configuration.setAllowedOrigins(Arrays.asList(
-        // "http://localhost:3000",
-        // "http://127.0.0.1:5500",
-        // "http://localhost:8081",
-        // "http://192.168.1.x:8081",
-        // "exp://192.168.1.x:8081"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "https://prj2-user-management.vercel.app"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
