@@ -19,7 +19,8 @@ public class UserAuthenticate implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("USER"));
+        String roleName = user.getRole() != null ? user.getRole() : "USER";
+        return Collections.singleton(new SimpleGrantedAuthority(roleName));
     }
 
     @Override

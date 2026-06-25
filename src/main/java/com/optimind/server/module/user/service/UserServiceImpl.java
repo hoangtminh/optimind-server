@@ -105,4 +105,11 @@ public class UserServiceImpl implements UserService {
             .currentUserRank(currentUserRank)
             .build();
     }
+
+    @Override
+    public org.springframework.data.domain.Page<UserDto> searchUsers(String query, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return userRepository.searchUsers(query, pageable)
+                .map(authMapper::mapToUserDto);
+    }
 }

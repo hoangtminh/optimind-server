@@ -28,6 +28,14 @@ public class UserController {
         return listUserDto;
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<org.springframework.data.domain.Page<UserDto>> searchUsers(
+            @org.springframework.web.bind.annotation.RequestParam(value = "query", required = false) String query,
+            @org.springframework.web.bind.annotation.RequestParam(value = "page", defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(value = "size", defaultValue = "10") int size) {
+        return ResponseEntity.ok(userService.searchUsers(query, page, size));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserProfile(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getUserProfile(id));

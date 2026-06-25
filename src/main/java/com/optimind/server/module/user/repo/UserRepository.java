@@ -27,4 +27,12 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(u) + 1 FROM UserEntity u WHERE u.studyTime > :studyTime")
     long calculateRank(Integer studyTime);
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT u FROM UserEntity u WHERE (:query IS NULL OR :query = '' OR LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')))"
+    )
+    org.springframework.data.domain.Page<UserEntity> searchUsers(
+        @org.springframework.data.repository.query.Param("query") String query, 
+        org.springframework.data.domain.Pageable pageable
+    );
 }

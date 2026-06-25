@@ -14,4 +14,6 @@ public interface UserService {
     UserDto getUserProfile(UUID id);
 
     com.optimind.server.module.user.dto.LeaderboardResponse getLeaderboard(UUID currentUserId);
+
+    org.springframework.data.domain.Page<UserDto> searchUsers(String query, int page, int size);
 }
