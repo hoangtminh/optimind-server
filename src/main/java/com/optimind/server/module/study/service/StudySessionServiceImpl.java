@@ -65,6 +65,36 @@ public class StudySessionServiceImpl implements StudySessionService {
                         sessionLogRepository.saveAll(logs);
                 }
 
+                // Update user study time, streak and last active date
+                int sessionMinutes = (int) (request.totalTime() / 60);
+                if (sessionMinutes > 0) {
+                        user.setStudyTime((user.getStudyTime() != null ? user.getStudyTime() : 0) + sessionMinutes);
+                }
+
+                // Streak calculation
+                java.time.ZoneId zone = java.time.ZoneId.of("Asia/Ho_Chi_Minh");
+                java.time.LocalDate today = java.time.LocalDate.now(zone);
+
+                java.time.LocalDate lastDate = user.getLastActiveDate() != null
+                                ? user.getLastActiveDate().atZone(zone).toLocalDate()
+                                : null;
+
+                if (lastDate == null) {
+                        user.setCurrentStreak(1);
+                        user.setLongestStreak(Math.max(user.getLongestStreak() != null ? user.getLongestStreak() : 0, 1));
+                } else if (!lastDate.equals(today)) {
+                        if (lastDate.equals(today.minusDays(1))) {
+                                int newStreak = (user.getCurrentStreak() != null ? user.getCurrentStreak() : 0) + 1;
+                                user.setCurrentStreak(newStreak);
+                                user.setLongestStreak(Math.max(user.getLongestStreak() != null ? user.getLongestStreak() : 0, newStreak));
+                        } else {
+                                user.setCurrentStreak(1);
+                        }
+                }
+
+                user.setLastActiveDate(java.time.Instant.now());
+                userRepository.save(user);
+
                 return toResponse(session);
         }
 
