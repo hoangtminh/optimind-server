@@ -25,5 +25,6 @@ public class UserDto {
     private Integer level;
     private Integer longestStreak;
     private Integer studyTime;
+    private Boolean suspended;
     private Instant createdAt;
 }

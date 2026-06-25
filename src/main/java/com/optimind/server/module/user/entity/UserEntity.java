@@ -58,6 +58,9 @@ public class UserEntity {
     @Builder.Default
     private Integer studyTime = 0;
 
+    @Builder.Default
+    private Boolean suspended = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private Instant createdAt;

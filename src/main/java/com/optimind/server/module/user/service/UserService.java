@@ -16,4 +16,8 @@ public interface UserService {
     com.optimind.server.module.user.dto.LeaderboardResponse getLeaderboard(UUID currentUserId);
 
     org.springframework.data.domain.Page<UserDto> searchUsers(String query, int page, int size);
+
+    UserDto suspendUser(UUID id, boolean suspend);
+
+    void deleteUser(UUID id);
 }

@@ -4,9 +4,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.optimind.server.module.user.dto.UserDto;
@@ -44,6 +48,21 @@ public class UserController {
     @GetMapping("/leaderboard")
     public ResponseEntity<com.optimind.server.module.user.dto.LeaderboardResponse> getLeaderboard() {
         return ResponseEntity.ok(userService.getLeaderboard(getCurrentUserId()));
+    }
+
+    @PutMapping("/{id}/suspend")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<UserDto> suspendUser(
+            @PathVariable UUID id,
+            @RequestParam("suspended") boolean suspended) {
+        return ResponseEntity.ok(userService.suspendUser(id, suspended));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 
     private UUID getCurrentUserId() {

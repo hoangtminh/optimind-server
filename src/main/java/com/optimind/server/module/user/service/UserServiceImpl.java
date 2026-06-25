@@ -112,4 +112,21 @@ public class UserServiceImpl implements UserService {
         return userRepository.searchUsers(query, pageable)
                 .map(authMapper::mapToUserDto);
     }
+
+    @Override
+    public UserDto suspendUser(UUID id, boolean suspend) {
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setSuspended(suspend);
+        UserEntity updated = userRepository.save(user);
+        return authMapper.mapToUserDto(updated);
+    }
+
+    @Override
+    public void deleteUser(UUID id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("User not found with id: " + id);
+        }
+        userRepository.deleteById(id);
+    }
 }

@@ -48,7 +48,7 @@ public class UserAuthenticate implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return user.getSuspended() == null || !user.getSuspended();
     }
 
     @Override
@@ -58,6 +58,6 @@ public class UserAuthenticate implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.getSuspended() == null || !user.getSuspended();
     }
 }
