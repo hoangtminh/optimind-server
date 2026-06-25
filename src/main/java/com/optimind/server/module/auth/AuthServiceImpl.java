@@ -28,6 +28,11 @@ import com.optimind.server.security.TokenEntity;
 import com.optimind.server.security.TokenRepository;
 
 import lombok.RequiredArgsConstructor;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -186,5 +191,48 @@ public class AuthServiceImpl implements AuthService {
         token.setRevoked(false);
         token.setExpiryDate(Instant.now().plusMillis(1000L * 60 * 60 * 24 * 3)); // 3 days
         tokenRepository.save(token);
+    }
+
+    @Override
+    public AuthResponse.AuthenticateResponse processGoogleIdTokenLogin(AuthRequest.GoogleIdTokenRequest req) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                    .setAudience(Collections.singletonList(clientId))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(req.idToken());
+            if (idToken != null) {
+                GoogleIdToken.Payload payload = idToken.getPayload();
+                String email = payload.getEmail();
+                String name = (String) payload.get("name");
+                String pictureUrl = (String) payload.get("picture");
+
+                UserEntity user = userRepository.findByEmail(email)
+                        .map(existingUser -> {
+                            existingUser.setImageUrl(pictureUrl);
+                            existingUser.setUsername(name);
+                            return userRepository.save(existingUser);
+                        })
+                        .orElseGet(() -> {
+                            UserEntity newUser = new UserEntity();
+                            newUser.setEmail(email);
+                            newUser.setUsername(name);
+                            newUser.setImageUrl(pictureUrl);
+                            newUser.setRole(UserEntity.Role.USER.toString());
+                            return userRepository.save(newUser);
+                        });
+
+                String refreshToken = jwtService.generateRefreshToken(user);
+                saveUserToken(user, refreshToken);
+
+                return new AuthenticateResponse(
+                        jwtService.generateAccessToken(user),
+                        refreshToken);
+            } else {
+                throw new RuntimeException("Xác thực ID Token Google thất bại.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi xác thực Google ID Token: " + e.getMessage(), e);
+        }
     }
 }

@@ -15,4 +15,6 @@ public interface AuthService {
     AuthResponse.AuthenticateResponse refreshToken(AuthRequest.RefreshTokenRequest request);
 
     AuthResponse.AuthenticateResponse processGoogleLogin(AuthRequest.OAuth2Request code);
+
+    AuthResponse.AuthenticateResponse processGoogleIdTokenLogin(AuthRequest.GoogleIdTokenRequest req);
 }

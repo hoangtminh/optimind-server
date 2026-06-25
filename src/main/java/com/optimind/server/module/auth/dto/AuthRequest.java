@@ -16,4 +16,6 @@ public class AuthRequest {
         public record RefreshTokenRequest(String refreshToken) {
         }
 
+        public record GoogleIdTokenRequest(String idToken) {
+        }
 }

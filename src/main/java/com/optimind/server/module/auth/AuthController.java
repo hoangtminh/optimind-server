@@ -62,6 +62,16 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("token", jwt));
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<?> handleGoogleIdTokenLogin(@RequestBody AuthRequest.GoogleIdTokenRequest req) {
+        String idToken = req.idToken();
+        if (idToken == null)
+            return ResponseEntity.badRequest().build();
+
+        AuthResponse.AuthenticateResponse jwt = authService.processGoogleIdTokenLogin(req);
+        return ResponseEntity.ok(Map.of("token", jwt));
+    }
+
     @GetMapping("/oauth2/callback")
     public ResponseEntity<Void> handleGoogleCallback(
             @org.springframework.web.bind.annotation.RequestParam("code") String code,
