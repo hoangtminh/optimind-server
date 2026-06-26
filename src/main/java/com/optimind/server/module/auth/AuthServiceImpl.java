@@ -124,14 +124,21 @@ public class AuthServiceImpl implements AuthService {
         params.add("redirect_uri", redirectUri);
         params.add("grant_type", "authorization_code");
 
-        HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(params, tokenHeaders);
-        var response = restTemplate.postForEntity(GOOGLE_TOKEN_URL, tokenRequest, Map.class);
+        Map<String, Object> responseBody;
+        try {
+            HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(params, tokenHeaders);
+            var response = restTemplate.postForEntity(GOOGLE_TOKEN_URL, tokenRequest, Map.class);
+            responseBody = response.getBody();
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            System.err.println("Lỗi khi trao đổi token với Google: " + e.getResponseBodyAsString());
+            throw new RuntimeException("Lỗi trao đổi token Google: " + e.getResponseBodyAsString(), e);
+        }
 
-        if (response.getBody() == null || !response.getBody().containsKey("access_token")) {
+        if (responseBody == null || !responseBody.containsKey("access_token")) {
             throw new RuntimeException("Không lấy được access token từ Google");
         }
 
-        String googleAccessToken = (String) response.getBody().get("access_token");
+        String googleAccessToken = (String) responseBody.get("access_token");
 
         HttpHeaders userHeaders = new HttpHeaders();
         userHeaders.setBearerAuth(googleAccessToken);

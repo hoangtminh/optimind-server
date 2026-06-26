@@ -1,5 +1,7 @@
 package com.optimind.server.module.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class AuthRequest {
         public record LoginRequest(String email, String password, boolean remember) {
         }
@@ -17,5 +19,12 @@ public class AuthRequest {
         }
 
         public record GoogleIdTokenRequest(String idToken) {
+        }
+
+        public record GoogleLoginRequest(
+                @JsonProperty("code") String code,
+                @JsonProperty("redirectUri") String redirectUri,
+                @JsonProperty("idToken") String idToken
+        ) {
         }
 }

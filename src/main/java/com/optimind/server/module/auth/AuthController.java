@@ -50,29 +50,23 @@ public class AuthController {
         return authService.refreshToken(request);
     }
 
-    @PostMapping("/oauth2/google")
-    public ResponseEntity<?> handleGoogleLogin(@RequestBody AuthRequest.OAuth2Request req) {
-        String code = req.code();
-        if (code == null)
-            return ResponseEntity.badRequest().build();
-
-        // Xử lý đổi code lấy thông tin user & tạo JWT (như hướng dẫn trước)
-        AuthResponse.AuthenticateResponse jwt = authService.processGoogleLogin(req);
-
-        return ResponseEntity.ok(Map.of("token", jwt));
-    }
-
     @PostMapping("/google")
-    public ResponseEntity<?> handleGoogleIdTokenLogin(@RequestBody AuthRequest.GoogleIdTokenRequest req) {
-        String idToken = req.idToken();
-        if (idToken == null)
-            return ResponseEntity.badRequest().build();
-
-        AuthResponse.AuthenticateResponse jwt = authService.processGoogleIdTokenLogin(req);
-        return ResponseEntity.ok(Map.of("token", jwt));
+    public ResponseEntity<?> handleGoogleLogin(@RequestBody AuthRequest.GoogleLoginRequest req) {
+        if (req.idToken() != null && !req.idToken().trim().isEmpty()) {
+            AuthResponse.AuthenticateResponse jwt = authService.processGoogleIdTokenLogin(
+                    new AuthRequest.GoogleIdTokenRequest(req.idToken())
+            );
+            return ResponseEntity.ok(Map.of("token", jwt));
+        } else if (req.code() != null && !req.code().trim().isEmpty()) {
+            AuthResponse.AuthenticateResponse jwt = authService.processGoogleLogin(
+                    new AuthRequest.OAuth2Request(req.code(), req.redirectUri())
+            );
+            return ResponseEntity.ok(Map.of("token", jwt));
+        }
+        return ResponseEntity.badRequest().build();
     }
 
-    @GetMapping("/oauth2/callback")
+    @GetMapping("/callback")
     public ResponseEntity<Void> handleGoogleCallback(
             @org.springframework.web.bind.annotation.RequestParam("code") String code,
             @org.springframework.web.bind.annotation.RequestParam("state") String state) {
