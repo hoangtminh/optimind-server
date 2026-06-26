@@ -129,4 +129,20 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.deleteById(id);
     }
+
+    @Override
+    public UserDto changeUserRole(UUID id, String role) {
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        
+        try {
+            UserEntity.Role.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid role: " + role);
+        }
+        
+        user.setRole(role.toUpperCase());
+        UserEntity updated = userRepository.save(user);
+        return authMapper.mapToUserDto(updated);
+    }
 }

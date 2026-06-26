@@ -20,4 +20,6 @@ public interface UserService {
     UserDto suspendUser(UUID id, boolean suspend);
 
     void deleteUser(UUID id);
+
+    UserDto changeUserRole(UUID id, String role);
 }

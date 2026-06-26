@@ -65,6 +65,17 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/role")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<UserDto> changeUserRole(
+            @PathVariable UUID id,
+            @RequestParam("role") String role) {
+        if (id.equals(getCurrentUserId())) {
+            throw new IllegalArgumentException("You cannot change your own role.");
+        }
+        return ResponseEntity.ok(userService.changeUserRole(id, role));
+    }
+
     private UUID getCurrentUserId() {
         Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof com.optimind.server.module.auth.UserAuthenticate ua) {
