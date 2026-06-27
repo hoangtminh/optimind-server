@@ -86,8 +86,7 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = null;
 
         if (loginEntity.remember()) {
-            refreshToken = jwtService.generateRefreshToken(user);
-            saveUserToken(user, refreshToken);
+            refreshToken = getOrSaveUserToken(user);
         }
 
         if (auth.isAuthenticated()) {
@@ -169,8 +168,7 @@ public class AuthServiceImpl implements AuthService {
                     return userRepository.save(newUser);
                 });
 
-        String refreshToken = jwtService.generateRefreshToken(user);
-        saveUserToken(user, refreshToken);
+        String refreshToken = getOrSaveUserToken(user);
 
         AuthResponse.AuthenticateResponse res = new AuthenticateResponse(
                 jwtService.generateAccessToken(user),
@@ -196,13 +194,37 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
     }
 
-    private void saveUserToken(UserEntity user, String refreshToken) {
-        TokenEntity token = new TokenEntity();
-        token.setUser(user);
-        token.setRefreshToken(refreshToken);
-        token.setRevoked(false);
-        token.setExpiryDate(Instant.now().plusMillis(1000L * 60 * 60 * 24 * 3)); // 3 days
-        tokenRepository.save(token);
+    private String getOrSaveUserToken(UserEntity user) {
+        List<TokenEntity> tokens = tokenRepository.findAllByUser(user);
+        if (tokens.isEmpty()) {
+            String newRefreshToken = jwtService.generateRefreshToken(user);
+            TokenEntity token = new TokenEntity();
+            token.setUser(user);
+            token.setRefreshToken(newRefreshToken);
+            token.setRevoked(false);
+            token.setExpiryDate(Instant.now().plusMillis(1000L * 60 * 60 * 24 * 3)); // 3 days
+            tokenRepository.save(token);
+            return newRefreshToken;
+        }
+
+        TokenEntity existingToken = tokens.get(0);
+
+        if (tokens.size() > 1) {
+            for (int i = 1; i < tokens.size(); i++) {
+                tokenRepository.delete(tokens.get(i));
+            }
+        }
+
+        if (existingToken.getExpiryDate().isAfter(Instant.now())) {
+            return existingToken.getRefreshToken();
+        } else {
+            String newRefreshToken = jwtService.generateRefreshToken(user);
+            existingToken.setRefreshToken(newRefreshToken);
+            existingToken.setRevoked(false);
+            existingToken.setExpiryDate(Instant.now().plusMillis(1000L * 60 * 60 * 24 * 3)); // 3 days
+            tokenRepository.save(existingToken);
+            return newRefreshToken;
+        }
     }
 
     @Override
@@ -240,8 +262,7 @@ public class AuthServiceImpl implements AuthService {
                             return userRepository.save(newUser);
                         });
 
-                String refreshToken = jwtService.generateRefreshToken(user);
-                saveUserToken(user, refreshToken);
+                String refreshToken = getOrSaveUserToken(user);
 
                 return new AuthenticateResponse(
                         jwtService.generateAccessToken(user),
