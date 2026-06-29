@@ -67,6 +67,9 @@ public class FriendServiceImpl implements FriendService {
         UserEntity user1 = request.getSender();
         UserEntity user2 = request.getReceiver();
 
+        if (friendshipRepository.findFriendshipBetween(user1.getId(), user2.getId()).isPresent()) {
+            throw new IllegalArgumentException("Users are already friends");
+        }
         FriendshipEntity friendship = FriendshipEntity.builder().user1(user1).user2(user2).build();
         friendship = friendshipRepository.save(friendship);
         friendRequestRepository.delete(request);
